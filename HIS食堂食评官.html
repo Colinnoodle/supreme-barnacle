@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HIS食堂食评官</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { -webkit-tap-highlight-color: transparent; user-select: none; }
+        .tab-active { color: #10b981; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .post-hidden { opacity: 0.3; filter: grayscale(100%); position: relative; }
+        .post-hidden::after { content: "🚫 该内容已被屏蔽"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: bold; z-index: 10; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen pb-20 lg:pb-6">
+
+    <!-- 注册弹窗 -->
+    <div id="registerOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 lg:p-8 max-w-md w-full shadow-2xl space-y-5 text-center animate-fade-in-up border border-slate-100">
+            <div class="space-y-1">
+                <span class="text-4xl block animate-bounce">🏫</span>
+                <h2 class="text-xl font-extrabold tracking-tight text-slate-950">加入 HIS 食堂食评官</h2>
+                <p class="text-xs text-slate-400">开启您的校园干饭质检官之旅</p>
+            </div>
+            <div class="space-y-2">
+                <button onclick="fastLogin('Google')" class="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold py-2.5 rounded-xl shadow-sm transition-all active:scale-[0.98]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.14 2.1-1.41 2.96v2.46h2.28c1.33-1.22 2.09-3.02 2.09-5.27z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-2.28-2.46c-.64.43-1.46.69-2.37.69-1.82 0-3.37-1.23-3.92-2.88H1.38v2.54C3.36 21.93 7.39 24 12 24z"/><path fill="#FBBC05" d="M8.08 16.44c-.14-.43-.22-.89-.22-1.36s.08-.93.22-1.36V11.18H1.38C.5 12.93 0 14.91 0 17s.5 4.07 1.38 5.82l6.7-2.54z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.39 0 3.36 2.07 1.38 5.82l6.7 5.36c.55-1.65 2.1-2.88 3.92-2.88z"/></svg>
+                    使用 Google 账号一键登录
+                </button>
+                <button onclick="fastLogin('Discord')" class="w-full flex items-center justify-center gap-2.5 bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-bold py-2.5 rounded-xl shadow-sm transition-all active:scale-[0.98]">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.075.075 0 0 1-.006.127 12.298 12.298 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>
+                    使用 Discord 账号一键登录
+                </button>
+            </div>
+            <div class="flex items-center my-3 before:flex-1 before:border-t before:border-slate-200 before:mr-2 after:flex-1 after:border-t after:border-slate-200 after:ml-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">或使用手机/邮箱快捷登记</div>
+            <div class="space-y-3 text-left">
+                <div class="flex gap-2">
+                    <button type="button" onclick="fastLogin('手机')" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all">📱 手机号登录</button>
+                    <button type="button" onclick="fastLogin('邮箱')" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all">✉️ 邮箱登录</button>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">挑选一个干饭人头像</label>
+                    <div class="grid grid-cols-6 gap-2" id="regAvatarContainer"></div>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-500 uppercase">食评官昵称</label>
+                    <input type="text" id="regUsernameInput" placeholder="例如：HIS干饭大王" class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-500">
+                </div>
+            </div>
+            <button onclick="submitRegistration()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-100 text-xs">直接游客进场 (+50 EXP)</button>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3 lg:px-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl lg:text-3xl">🏫</span>
+                <h1 class="text-lg lg:text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent">HIS食堂食评官</h1>
+            </div>
+            <div class="hidden lg:flex items-center space-x-4">
+                <div class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5">
+                    <span>🔥 连续打卡</span><span id="header-streak-num-pc" class="text-sm font-extrabold text-amber-600">0</span><span>天</span>
+                </div>
+                <button onclick="openPostModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow-md shadow-emerald-100 active:scale-95 transition-all">发布新食评</button>
+            </div>
+            <div class="lg:hidden flex items-center space-x-2">
+                <div class="bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
+                    <span>🔥</span><span id="header-streak-num-mobile">0</span><span>天</span>
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
+                    <span>🪙</span><span id="header-coins-mobile">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- 左侧：个人资料 -->
+            <aside id="layout-profile" class="lg:col-span-3 lg:block sticky top-[88px] h-fit space-y-5 hidden">
+                <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-6 text-white shadow-md shadow-emerald-50 relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 text-9xl opacity-10">🏫</div>
+                    <div class="flex items-center space-x-4">
+                        <div id="profile-avatar-display" class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-3xl shadow-inner">🤖</div>
+                        <div>
+                            <h2 id="profile-name-display" class="text-base font-bold truncate max-w-[140px]">我（食堂质检员）</h2>
+                            <span id="userTitle" class="inline-block mt-1 bg-amber-400 text-amber-950 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">新手</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 space-y-1.5">
+                        <div class="flex justify-between text-xs font-medium text-emerald-100"><span>HIS巡逻经验值 (EXP)</span><span id="expText">0 / 100</span></div>
+                        <div class="w-full h-2 bg-black/15 rounded-full overflow-hidden"><div id="expBar" class="h-full bg-white rounded-full transition-all duration-300" style="width:0%"></div></div>
+                    </div>
+                </div>
+                <div class="bg-amber-50/60 border border-amber-100 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-amber-900 flex items-center"><span class="mr-1.5 text-base">🔥</span> 连续打卡进度</span>
+                        <span class="text-base font-extrabold text-amber-600"><span id="profile-streak-num">0</span> 天</span>
+                    </div>
+                    <div id="roastTip" class="text-xs text-amber-800 leading-relaxed bg-white/80 p-3 rounded-xl border border-amber-100/50 italic">暂无打卡数据。</div>
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-yellow-900 flex items-center"><span class="mr-1.5 text-base">🪙</span> 我的食评币</span>
+                        <span class="text-base font-extrabold text-yellow-600"><span id="profile-coins">0</span> 枚</span>
+                    </div>
+                    <p class="text-[10px] text-yellow-700">发帖+10 | 评论+2 | 举报+5 | 成功屏蔽+20</p>
+                    <button onclick="openShopModal()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-950 text-xs font-bold py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5"><span>🛒</span> 头像框商店</button>
+                </div>
+                <button onclick="openEditProfileModal()" class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold py-2.5 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-1.5"><span>⚙️</span> 修改个人资料</button>
+            </aside>
+
+            <!-- 中间：Feed流 -->
+            <section id="layout-feed" class="lg:col-span-6 space-y-4">
+                <div class="hidden lg:flex bg-white p-1 rounded-xl border border-slate-100 shadow-sm gap-2">
+                    <button id="pc-tab-btn-feed" onclick="switchPCTab('feed')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500 text-white transition-all">💬 HIS 食堂吐槽社区</button>
+                    <button id="pc-tab-btn-menu" onclick="switchPCTab('menu')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-700 transition-all">📅 HIS 每日精选菜单</button>
+                </div>
+                <div id="panel-feed-container" class="space-y-4">
+                    <div id="reviewsContainer" class="space-y-4"></div>
+                </div>
+                <div id="panel-menu-container" class="hidden space-y-4 animate-fade-in-up">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                            <div><h3 class="text-sm font-extrabold text-slate-800">🏫 HIS 食堂每周供应菜单</h3><p class="text-[10px] text-slate-400 mt-0.5">每日更换：包含四大特色营养干饭专区</p></div>
+                            <div class="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold w-full sm:w-auto overflow-x-auto">
+                                <button onclick="selectMenuDay(1)" id="day-btn-1" class="px-2.5 py-1.5 rounded-md bg-white text-slate-800 shadow-sm">周一</button>
+                                <button onclick="selectMenuDay(2)" id="day-btn-2" class="px-2.5 py-1.5 rounded-md text-slate-400">周二</button>
+                                <button onclick="selectMenuDay(3)" id="day-btn-3" class="px-2.5 py-1.5 rounded-md text-slate-400">周三</button>
+                                <button onclick="selectMenuDay(4)" id="day-btn-4" class="px-2.5 py-1.5 rounded-md text-slate-400">周四</button>
+                                <button onclick="selectMenuDay(5)" id="day-btn-5" class="px-2.5 py-1.5 rounded-md text-slate-400">周五</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="menuDetailsContainer"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右侧：排行榜 -->
+            <aside id="layout-rank" class="lg:col-span-3 lg:block sticky top-[88px] h-fit hidden">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center mb-1"><span class="text-lg mr-2">📊</span> HIS本周点评狂热榜</h3>
+                    <p class="text-[10px] text-slate-400 mb-4">排行随大伙发帖自动更新</p>
+                    <div class="space-y-3" id="rankList"></div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- 底部移动端导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 py-1.5 px-3 flex justify-between items-center z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] lg:hidden">
+        <button onclick="switchMobileTab('feed')" id="btn-tab-feed" class="flex flex-col items-center space-y-0.5 tab-active flex-1 py-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-[9px] font-bold">食评社区</span>
+        </button>
+        <button onclick="switchMobileTab('menu')" id="btn-tab-menu" class="flex flex-col items-center space-y-0.5 text-slate-400 flex-1 py-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span class="text-[9px] font-bold">每日菜单</span>
+        </button>
+        <div class="flex-1 flex justify-center -translate-y-4">
+            <button onclick="openPostModal()" class="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 active:scale-95 transition-transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+        </div>
+        <button onclick="switchMobileTab('rank')" id="btn-tab-rank" class="flex flex-col items-center space-y-0.5 text-slate-400 flex-1 py-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 114 0v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span class="text-[9px] font-bold">排行榜</span>
+        </button>
+        <button onclick="switchMobileTab('profile')" id="btn-tab-profile" class="flex flex-col items-center space-y-0.5 text-slate-400 flex-1 py-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-[9px] font-bold">我的</span>
+        </button>
+    </nav>
+
+    <!-- 发布点评弹窗 -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-end lg:items-center lg:justify-center">
+        <div id="modalContent" class="w-full bg-white rounded-t-3xl lg:rounded-2xl p-6 space-y-4 max-h-[90vh] lg:max-h-fit lg:max-w-md overflow-y-auto translate-y-full lg:translate-y-0 lg:scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 class="text-sm font-bold text-slate-800 flex items-center"><span class="mr-2">📸</span>发布我的真实午餐点评</h2>
+                <button onclick="closeModal()" class="p-1 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <form id="reviewForm" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">上传我拍的照片 <span class="text-red-500">*必填</span></label>
+                    <div class="relative border-2 border-dashed border-slate-200 rounded-xl hover:border-emerald-400 transition-colors bg-slate-50 p-4 flex flex-col items-center justify-center cursor-pointer">
+                        <input type="file" id="foodImage" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer">
+                        <span class="text-2xl mb-1">📸</span>
+                        <span id="uploadStatusText" class="text-xs text-slate-400 text-center">点击或拖拽上传午餐实拍图</span>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">点评文字</label>
+                    <textarea id="reviewText" placeholder="今天HIS食堂的饭菜如何？阿姨今天手抖了没？" required class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-500 h-20 resize-none"></textarea>
+                </div>
+                <div class="space-y-3 bg-slate-50 p-4 rounded-xl">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">滑块评分 (0-10)</span>
+                    <div class="space-y-1"><div class="flex justify-between text-xs font-bold text-slate-600"><span>😋 口味</span><span id="valTaste" class="text-emerald-600">5</span></div><input type="range" id="scoreTaste" min="0" max="10" value="5" class="w-full accent-emerald-500 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div>
+                    <div class="space-y-1"><div class="flex justify-between text-xs font-bold text-slate-600"><span>🔥 温度</span><span id="valTemp" class="text-emerald-600">5</span></div><input type="range" id="scoreTemp" min="0" max="10" value="5" class="w-full accent-emerald-500 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div>
+                    <div class="space-y-1"><div class="flex justify-between text-xs font-bold text-slate-600"><span>✨ 外观</span><span id="valLook" class="text-emerald-600">5</span></div><input type="range" id="scoreLook" min="0" max="10" value="5" class="w-full accent-emerald-500 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div>
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-emerald-100 flex justify-center items-center">确认发布 (+25 EXP)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑资料弹窗 -->
+    <div id="profileOverlay" class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-end lg:items-center lg:justify-center">
+        <div id="profileContent" class="w-full bg-white rounded-t-3xl lg:rounded-2xl p-6 space-y-4 max-h-[90vh] lg:max-h-fit lg:max-w-md overflow-y-auto translate-y-full lg:translate-y-0 lg:scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 class="text-sm font-bold text-slate-800 flex items-center"><span class="mr-2">⚙️</span>修改个性资料</h2>
+                <button onclick="closeEditProfileModal()" class="p-1 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-2"><label class="block text-xs font-bold text-slate-400 uppercase">挑选您的新头像</label><div class="grid grid-cols-6 gap-2.5 py-1" id="avatarPickerContainer"></div></div>
+                <div class="space-y-1.5"><label class="block text-xs font-bold text-slate-400 uppercase">食评官昵称</label><input type="text" id="editUsernameInput" placeholder="输入新的昵称..." class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-500"></div>
+                <button onclick="saveUserProfile()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-3 rounded-xl transition-colors shadow-lg shadow-emerald-100 mb-2">保存修改</button>
+                <button onclick="deleteAccountAndClear()" class="w-full bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 text-[11px] font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1">⚠️ 注销当前账号并清空缓存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商店弹窗 -->
+    <div id="shopOverlay" class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-end lg:items-center lg:justify-center">
+        <div id="shopContent" class="w-full bg-white rounded-t-3xl lg:rounded-2xl p-6 space-y-4 max-h-[90vh] lg:max-h-fit lg:max-w-md overflow-y-auto translate-y-full lg:translate-y-0 lg:scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 class="text-sm font-bold text-slate-800 flex items-center"><span class="mr-2">🛒</span>头像框商店</h2>
+                <button onclick="closeShopModal()" class="p-1 text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-xl">
+                <span class="text-xs font-bold text-yellow-900">💰 当前余额</span>
+                <span class="text-base font-extrabold text-yellow-600"><span id="shop-coins">0</span> 🪙</span>
+            </div>
+            <div id="shopItems" class="space-y-2 max-h-64 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-xs font-semibold z-50 shadow-md opacity-0 pointer-events-none transition-all duration-300">提示信息</div>
+
+<script>
+// ==================== 配置数据 ====================
+const avatarOptions = ["🤖","🐼","🦊","🦁","🐱","🐷","🐸","🐹","🌶️","🍗","🥑","🧁"];
+
+const hisMenuData = {
+    1:{drinks:["🧃 鲜榨苹果汁","🥛 纯牛奶","🥛 原味酸奶","🥤 冰镇柠檬水"],sandwich:["🍞 全麦硬欧包","🥓 烟熏里脊肉","🍳 温泉厚蛋烧","🧀 切达干酪片"],salad:["🥬 罗马生菜","🍅 圣女果","🌽 甜玉米粒","🥣 低脂油醋汁"],mains:["🍝 奶油蘑菇培根意面","🥩 黑椒煎牛排","🥗 凯撒沙拉配鸡胸","🍕 玛格丽特比萨"]},
+    2:{drinks:["🧃 鲜榨橙汁","🥛 纯牛奶","🥛 草莓酸奶","🥤 青柠气泡水"],sandwich:["🥖 法式巴盖特","🍗 烟熏鸡胸肉","🥑 熟透牛油果","🥩 萨拉米香肠"],salad:["🥬 绿脆芝麻菜","🥒 水果黄瓜","🥕 脆甜胡萝卜丝","🥣 浓郁千岛酱"],mains:["🍲 秘制红烧肉","🍛 黄咖喱鸡肉","🥩 杭椒牛柳饭","🐟 广式清蒸鲈鱼"]},
+    3:{drinks:["🧃 鲜榨葡萄汁","🥛 纯牛奶","🥛 蓝莓酸奶","🥤 冰镇柠檬水"],sandwich:["🍞 布里欧修面包","🥩 慢烤安格斯牛排","🧅 黄油炒洋葱丝","🍄 烤褐菇片"],salad:["🥬 奶油生菜","🥑 牛油果碎","🍍 凤梨丁","🥣 秘制凯撒酱"],mains:["🍜 老北京炸酱面","🍗 脆皮大鸡腿","🧆 扬州狮子头","🍲 蜀香回锅肉"]},
+    4:{drinks:["🧃 鲜榨苹果汁","🥛 纯牛奶","🥛 原味酸奶","🥤 青柠气泡水"],sandwich:["🥐 酥皮牛角包","🍳 现煎太阳蛋","🥓 枫糖培根脆","🧀 莫扎里拉干酪"],salad:["🥬 羽衣甘蓝","🍎 苹果丁","🥜 熟烤核桃仁","🥣 意式黑醋汁"],mains:["🍛 泰式绿咖喱鸡","🍤 咖喱大虾","🥘 印度黄油鸡","🫓 香煎馕饼"]},
+    5:{drinks:["🧃 鲜榨橙汁","🥛 纯牛奶","🥛 草莓酸奶","🥤 冰镇柠檬水"],sandwich:["🍞 英式白吐司","🐟 泉水金枪鱼肉","🍅 鲜切番茄片","🥬 爽脆生菜叶"],salad:["🥬 紫甘蓝丝","🧅 红洋葱圈","🍊 蜜桔瓣","🥣 蜂蜜芥末酱"],mains:["🍜 酸辣肥牛面","🍛 板栗烧鸡块","🍲 糖醋大排","🐟 香辣烤鱼块"]}
+};
+
+const illegalKeywords = [
+    // 广告诈骗类
+    "密/码","兼职","刷单","加微","威信","代考","枪手","低价出售","回扣","澳门赌场","发票","贷款","买卖","包过",
+    // 中文脏话 - 基础
+    "他妈的","傻逼","靠北","草泥马","滚蛋","垃圾食堂","死远点",
+    "操你妈","操你","草你","日你","妈的","狗屎","狗日的","贱人","婊子","鸡巴","屌","逼","屁眼",
+    "我艹","卧槽","我操","草拟","草泥","傻叉","傻比","煞笔","煞比",
+    "傻福","法克","发克",
+    // 英文脏话
+    "fuck","fucking","fucked","fucker","shit","damn","bitch","asshole","dick","bastard","cunt","nigger","whore","slut","retard","pussy","cock","penis","vagina",
+    // 更多中文脏话
+    "妈卖批","卖批","牛批","牛逼","鸡掰","干你娘","干你","干死","搞死",
+    "去死","废物","白痴","智障","脑残","神经病","有病","贱货","贱种","杂种","野种",
+    "蠢货","蠢猪","猪脑子","猪脑","二百五","二逼","二货","憨批","憨逼",
+    "畜生","牲口","禽兽","人渣","败类","垃圾","渣滓","蛀虫","毒瘤",
+    "丑八怪","丑逼","肥猪","胖子","瘦猴","矮子","瘸子","瞎子","聋子","哑巴",
+    // 更多谐音/变体
+    "我草","卧草","草草","艹你","艹了","特么","特喵","狗比","狗逼",
+    "沙雕","沙比","煞笔","杀比","杀逼","妈蛋","妈了个","他娘的",
+    "他妈","你妈","你大爷","你妹","滚粗","辣鸡","垃圾人",
+    "狗带","死全家","全家死","不得好死","断子绝孙","绝子绝孙",
+    // 拼音缩写/谐音
+    "cnm","tmd","nmd","qnmlgb","qnmd","wcnm","wdnmd","nmsl","nc","nt",
+    "沙口","小丑","贵物","贵物东西","寄了","开摆","摆烂","润了",
+    // 侮辱性词汇
+    "屌丝","屌丝男","屌丝女","凤凰男","孔雀女","拜金女","绿茶婊","白莲花","圣母婊",
+    "直男癌","妈宝男","普信男","普信女","下头男","下头女","油腻男",
+    // 歧视性词汇
+    "黑鬼","白皮猪","小日本","棒子","阿三","猴子","土著","蛮子",
+    "乡下人","农村人","农民工","打工仔","厂妹","站街","小姐",
+    // 暴力/不当内容
+    "自杀","自残","割腕","跳楼","上吊","服毒","杀人","强奸","性侵","猥亵","性骚扰",
+    "毒品","吸毒","贩毒","冰毒","海洛因","大麻","可卡因","摇头丸",
+   ];
+
+// ==================== 智能机器人生成系统 ====================
+const botNames = ["隔壁小王","干饭灵魂","华师大鸽王","食堂终结者","小红帽","无情的干饭机器","爱吃泡面","HIS课代表","快乐水爱好者","卡路里狂魔"];
+const botAvatars = ["🦊","🐼","🦁","🐱","🐷","🐸","🐹","🌶️","🍗","🥑"];
+
+const foodTemplates = {
+    positive:["今天{food}绝了！{detail}，HIS食堂阿姨今天手没抖！","{food}惊艳到我了，{detail}，强烈推荐！","终于吃到好吃的{food}了，{detail}，感动哭😭","这{food}可以封神了，{detail}，明天还要来！","{food}超出预期！{detail}，食堂终于开窍了"],
+    neutral:["{food}一般般吧，{detail}，无功无过","今天的{food}{detail}，凑合能吃","{food}还行，{detail}，期待改进","对{food}有点小失望，{detail}，希望下次更好"],
+    negative:["{food}踩雷了！{detail}，HIS食堂避雷避雷！","这{food}太难吃了，{detail}，浪费钱😤","{food}简直灾难，{detail}，千万别点","对{food}无语了，{detail}，食堂能不能用点心"]
+};
+const foodDetails = {
+    positive:["分量超足","味道很正","火候刚好","配料丰富","性价比超高","新鲜出炉","香气扑鼻"],
+    neutral:["味道平平","有点偏咸","温度一般","分量普通"],
+    negative:["又冷又硬","油腻腻的","味道怪怪的","量少得可怜","看着就没食欲","完全没味道"]
+};
+const foodItems = ["红烧肉","炸酱面","汉堡","鸡腿","炒饭","面条","饺子","盖浇饭","汤面","炒菜","奶茶","果汁"];
+const foodEmojis = {"红烧肉":"🥩","炸酱面":"🍜","汉堡":"🍔","鸡腿":"🍗","炒饭":"🍚","面条":"🍝","饺子":"🥟","盖浇饭":"🍛","汤面":"🍜","炒菜":"🥘","奶茶":"🧋","果汁":"🥤"};
+
+function generateFoodImage(foodType, sentiment) {
+    const colors = {positive:["#FFD93D","#6BCF7F","#FF9F45"],neutral:["#E8E8E8","#D4D4D4","#C0C0C0"],negative:["#8B8B8B","#A0A0A0","#6B6B6B"]};
+    const bg = (colors[sentiment]||colors.neutral)[Math.floor(Math.random()*3)];
+    const emoji = foodEmojis[foodType]||"🍽️";
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><rect width="100%" height="100%" fill="'+bg+'"/><circle cx="200" cy="110" r="65" fill="white" opacity="0.9"/><text x="170" y="138" font-size="55">'+emoji+'</text><text x="200" y="205" font-size="13" fill="#666" text-anchor="middle" font-family="sans-serif">HIS食堂实拍</text></svg>';
+    return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+}
+
+// 从当前菜单获取食物名称（去掉emoji）
+function getMenuFoodName(fullName) {
+    return fullName.replace(/^[^\s]+\s*/, '');
+}
+
+function generateBotPost() {
+    const botIndex = Math.floor(Math.random() * botNames.length);
+    const author = botNames[botIndex];
+    const authorAvatar = botAvatars[botIndex];
+    // 从当前菜单选食物
+    const menu = hisMenuData[activeMenuDay || 1];
+    const allMenuItems = [...menu.mains, ...menu.sandwich, ...menu.salad];
+    const fullFoodName = allMenuItems[Math.floor(Math.random() * allMenuItems.length)];
+    const food = getMenuFoodName(fullFoodName);
+    const sentiment = Math.random()>0.6?"positive":(Math.random()>0.4?"neutral":"negative");
+    const tpl = foodTemplates[sentiment][Math.floor(Math.random()*foodTemplates[sentiment].length)];
+    const detail = foodDetails[sentiment][Math.floor(Math.random()*foodDetails[sentiment].length)];
+    const text = tpl.replace("{food}",food).replace("{detail}",detail);
+    const taste = sentiment==="positive"?7+Math.floor(Math.random()*4):(sentiment==="neutral"?4+Math.floor(Math.random()*4):Math.floor(Math.random()*4));
+    const temp = 5+Math.floor(Math.random()*6);
+    const look = sentiment==="positive"?6+Math.floor(Math.random()*5):(sentiment==="neutral"?4+Math.floor(Math.random()*4):2+Math.floor(Math.random()*4));
+    return {id:"bot_"+Date.now()+"_"+Math.random().toString(36).substr(2,9),author,authorAvatar,text,food,sentiment,taste,temp,look,avgScore:((taste+temp+look)/3).toFixed(1),image:generateFoodImage(food,sentiment),date:"刚刚",likes:Math.floor(Math.random()*15),comments:[],reports:0,isHidden:false,isBot:true};
+}
+
+// ==================== 全局状态 ====================
+let activeMenuDay = 1;
+let isCommenting = false;
+
+// ==================== 初始化数据 ====================
+let reviewsArr = JSON.parse(localStorage.getItem('lunchReviewsHIS_v7_final'));
+if(!reviewsArr||reviewsArr.length===0){
+    reviewsArr=[];
+    // 生成3个正常帖子
+    for(let i=0;i<3;i++){const p=generateBotPost();p.date=["5分钟前","15分钟前","30分钟前"][i];reviewsArr.push(p);}
+    // 添加2个违规测试帖子
+    reviewsArr.push({
+        id:"bot_violent_1",author:"广告小号",authorAvatar:"🤡",text:"🔥🔥🔥 兼职刷单，日赚500+，加微信xxx，轻松赚钱不是梦！",
+        taste:2,temp:2,look:2,avgScore:"2.0",image:generateFoodImage("炒饭","negative"),
+        date:"1小时前",likes:0,comments:[],reports:0,isHidden:false,isBot:true,isViolating:true
+    });
+    reviewsArr.push({
+        id:"bot_violent_2",author:"骂人精",authorAvatar:"👹",text:"这食堂他妈的就是垃圾，傻逼厨师做的什么狗屎东西，死远点！",
+        taste:1,temp:1,look:1,avgScore:"1.0",image:generateFoodImage("面条","negative"),
+        date:"2小时前",likes:1,comments:[{user:"路人甲",text:"文明用语啊兄弟"}],reports:0,isHidden:false,isBot:true,isViolating:true
+    });
+}
+
+let userData = JSON.parse(localStorage.getItem('lunchUserDataHIS_v7_final'))||{registered:false,username:"我（食堂质检员）",avatar:"🤖",exp:0,streak:0,myPostCount:0,reportedPosts:[],coins:0,ownedFrames:[],equippedFrame:null};
+
+// ==================== 货币系统配置 ====================
+const COIN_REWARDS = {
+    post: 10,
+    comment: 2,
+    report: 5,
+    reportSuccess: 20
+};
+
+const AVATAR_FRAMES = [
+    {id:'frame_none',name:'无框',emoji:'',price:0},
+    {id:'frame_gold',name:'黄金框',emoji:'👑',price:100},
+    {id:'frame_silver',name:'白银框',emoji:'🥈',price:50},
+    {id:'frame_diamond',name:'钻石框',emoji:'💎',price:200},
+    {id:'frame_fire',name:'火焰框',emoji:'🔥',price:150},
+    {id:'frame_star',name:'星星框',emoji:'⭐',price:80}
+];
+
+// ==================== DOM引用（延迟获取） ====================
+let fileInput, uploadStatusText;
+
+function initDOM() {
+    fileInput = document.getElementById('foodImage');
+    uploadStatusText = document.getElementById('uploadStatusText');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                uploadStatusText.textContent = '🟢 已捕获实拍图: ' + this.files[0].name;
+                uploadStatusText.className = "text-xs text-emerald-600 font-bold text-center";
+            }
+        });
+    }
+    document.getElementById('scoreTaste').oninput = function(){document.getElementById('valTaste').textContent=this.value;};
+    document.getElementById('scoreTemp').oninput = function(){document.getElementById('valTemp').textContent=this.value;};
+    document.getElementById('scoreLook').oninput = function(){document.getElementById('valLook').textContent=this.value;};
+}
+
+// ==================== 核心函数 ====================
+function checkRegistration(){
+    if(!userData.registered){document.getElementById('registerOverlay').classList.remove('hidden');renderRegisterAvatarPicker();}
+    else{document.getElementById('registerOverlay').classList.add('hidden');updateUserPanel();renderReviews();renderLeaderboard();renderMenu(1);startBotSimulation();startBotPosting();}
+}
+
+function checkViolations(t){for(let w of illegalKeywords){if(t.toLowerCase().includes(w.toLowerCase()))return true;}return false;}
+
+function renderRegisterAvatarPicker(){
+    const c=document.getElementById('regAvatarContainer');c.innerHTML='';
+    avatarOptions.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='w-11 h-11 text-2xl flex items-center justify-center rounded-xl transition-all '+(userData.avatar===e?'bg-emerald-100 border-2 border-emerald-500 scale-105':'bg-slate-50 hover:bg-slate-100');b.textContent=e;b.onclick=()=>{userData.avatar=e;renderRegisterAvatarPicker();};c.appendChild(b);});
+}
+
+function fastLogin(type){const r=Math.floor(1000+Math.random()*9000);userData.username=type+'用户_'+r;userData.avatar=type==='Google'?'🤖':(type==='Discord'?'🦊':'🐼');userData.registered=true;userData.exp+=50;localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));document.getElementById('registerOverlay').classList.add('hidden');showToast('🎉 已成功通过 '+type+' 接口伪装登录！经验+50');checkRegistration();}
+
+function submitRegistration(){const n=document.getElementById('regUsernameInput').value.trim();if(!n){showToast("起一个响亮的干饭名号吧！");return;}if(checkViolations(n)){alert("🚨 注册失败：昵称包含违规字符！");return;}userData.username=n;userData.registered=true;userData.exp+=50;localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));document.getElementById('registerOverlay').classList.add('hidden');showToast("🎉 游客绑定成功！欢迎来到HIS食堂！");checkRegistration();}
+
+function deleteAccountAndClear(){if(confirm("⚠️ 确定要注销账号吗？所有数据将被清除！")){localStorage.removeItem('lunchUserDataHIS_v7_final');localStorage.removeItem('lunchReviewsHIS_v7_final');showToast("💥 账号已注销...");setTimeout(()=>window.location.reload(),1000);}}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('opacity-0','pointer-events-none');setTimeout(()=>t.classList.add('opacity-0','pointer-events-none'),2500);}
+
+function switchMobileTab(tab){
+    const allTabs=['feed','menu','rank','profile'];
+    allTabs.forEach(s=>{
+        const btn=document.getElementById('btn-tab-'+s);
+        if(!btn)return;
+        if(s===tab){
+            btn.classList.add('tab-active');btn.classList.remove('text-slate-400');
+            if(s==='feed'){
+                document.getElementById('layout-feed').classList.remove('hidden');
+                document.getElementById('panel-feed-container').classList.remove('hidden');
+                document.getElementById('panel-menu-container').classList.add('hidden');
+            }else if(s==='menu'){
+                document.getElementById('layout-feed').classList.remove('hidden');
+                document.getElementById('panel-feed-container').classList.add('hidden');
+                document.getElementById('panel-menu-container').classList.remove('hidden');
+                renderMenu(activeMenuDay||1);
+            }else{
+                const el=document.getElementById('layout-'+s);if(el)el.classList.remove('hidden');
+                document.getElementById('layout-feed').classList.add('hidden');
+            }
+        }else{
+            btn.classList.remove('tab-active');btn.classList.add('text-slate-400');
+            if(s!=='menu'){const el=document.getElementById('layout-'+s);if(el)el.classList.add('hidden');}
+        }
+    });
+}
+
+function switchPCTab(tab){
+    const bf=document.getElementById('pc-tab-btn-feed'),bm=document.getElementById('pc-tab-btn-menu'),pf=document.getElementById('panel-feed-container'),pm=document.getElementById('panel-menu-container');
+    if(tab==='feed'){bf.className="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500 text-white transition-all";bm.className="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-700 transition-all";pf.classList.remove('hidden');pm.classList.add('hidden');}
+    else{bm.className="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500 text-white transition-all";bf.className="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-700 transition-all";pm.classList.remove('hidden');pf.classList.add('hidden');}
+}
+
+function renderMenu(d){
+    activeMenuDay = d;
+    const m=hisMenuData[d];if(!m)return;
+    for(let i=1;i<=5;i++){const b=document.getElementById('day-btn-'+i);if(b)b.className=i===d?"px-2.5 py-1.5 rounded-md bg-white text-slate-800 shadow-sm":"px-2.5 py-1.5 rounded-md text-slate-400";}
+    const makeItem = (item) => '<div class="flex justify-between items-center bg-white p-2 rounded-lg text-xs cursor-pointer hover:bg-emerald-50 transition-colors" onclick="selectFoodForReview(\''+item.replace(/'/g,"\\'")+'\')"><span>'+item+'</span><span class="text-emerald-500 text-[10px]">点评</span></div>';
+    document.getElementById('menuDetailsContainer').innerHTML='<div class="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/30 space-y-2"><span class="text-xs font-bold text-blue-900 block">🥤 饮料专区</span>'+m.drinks.map(makeItem).join('')+'</div><div class="bg-amber-50/50 rounded-2xl p-4 border border-amber-100/30 space-y-2"><span class="text-xs font-bold text-amber-900 block">🥪 三明治 DIY</span>'+m.sandwich.map(makeItem).join('')+'</div><div class="bg-emerald-50/40 rounded-2xl p-4 border border-emerald-100/20 space-y-2"><span class="text-xs font-bold text-emerald-950 block">🥗 果蔬沙拉</span>'+m.salad.map(makeItem).join('')+'</div><div class="bg-rose-50/50 rounded-2xl p-4 border border-rose-100/30 space-y-2"><span class="text-xs font-bold text-rose-900 block">🍛 招牌主食</span>'+m.mains.map(makeItem).join('')+'</div>';
+}
+
+function selectFoodForReview(foodName) {
+    openPostModal();
+    const reviewText = document.getElementById('reviewText');
+    reviewText.value = '今天尝试了 ' + foodName + '，整体感觉：';
+    reviewText.focus();
+}
+function selectMenuDay(d){renderMenu(d);}
+
+function openPostModal(){document.getElementById('modalOverlay').classList.remove('pointer-events-none','opacity-0');document.getElementById('modalContent').classList.remove('translate-y-full','lg:scale-95');}
+function closeModal(){document.getElementById('modalContent').classList.add('translate-y-full','lg:scale-95');setTimeout(()=>{document.getElementById('modalOverlay').classList.add('pointer-events-none','opacity-0');document.getElementById('reviewForm').reset();if(uploadStatusText){uploadStatusText.textContent='点击或拖拽上传午餐实拍图';uploadStatusText.className='text-xs text-slate-400 text-center';}},150);}
+
+// ==================== 举报功能 ====================
+function reportPost(id){
+    let item=reviewsArr.find(r=>r.id==id);
+    if(!item)return;
+    if(!item.reports)item.reports=0;
+    item.reports++;
+    
+    // 举报奖励
+    const wasHidden = item.isHidden;
+    
+    localStorage.setItem('lunchReviewsHIS_v7_final',JSON.stringify(reviewsArr));
+    if(item.reports>=3){
+        item.isHidden=true;
+        // 成功屏蔽额外奖励
+        if(!wasHidden){
+            addCoins(COIN_REWARDS.reportSuccess, '成功屏蔽违规内容');
+        }else{
+            addCoins(COIN_REWARDS.report, '举报违规内容');
+        }
+        showToast("🚫 该内容已被多次举报，已屏蔽");
+    }else{
+        addCoins(COIN_REWARDS.report, '举报违规内容');
+        showToast("🚨 举报成功！该内容已被举报 "+item.reports+"/3 次，再举报"+(3-item.reports)+"次将屏蔽");
+    }
+    renderReviews();
+}
+
+// ==================== 发布点评 ====================
+document.getElementById('reviewForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const txt=document.getElementById('reviewText').value.trim();
+    if(checkViolations(txt)){alert("🚨 发布被拒绝：内容包含违规词汇！");return;}
+    const btn=document.getElementById('submitBtn'),file=fileInput?fileInput.files[0]:null;
+    if(!file){showToast("⚠️ 请上传真实的午餐照片！");return;}
+    btn.disabled=true;btn.textContent="图片极速上传中...";
+    const reader=new FileReader();reader.readAsDataURL(file);
+    reader.onload=function(ev){const img=new Image();img.src=ev.target.result;img.onload=function(){
+        const c=document.createElement('canvas'),ctx=c.getContext('2d'),maxW=500,s=maxW/img.width;c.width=img.width>maxW?maxW:img.width;c.height=img.width>maxW?img.height*s:img.height;ctx.drawImage(img,0,0,c.width,c.height);
+        const data=c.toDataURL('image/jpeg',0.6),taste=parseInt(document.getElementById('scoreTaste').value),temp=parseInt(document.getElementById('scoreTemp').value),look=parseInt(document.getElementById('scoreLook').value),avg=((taste+temp+look)/3).toFixed(1);
+        let nr={id:'user_'+Date.now(),author:userData.username,authorAvatar:userData.avatar,image:data,text:txt,taste,temp,look,avgScore:avg,date:"刚刚",likes:0,comments:[],reports:0,isHidden:false,isBot:false};
+        reviewsArr.unshift(nr);localStorage.setItem('lunchReviewsHIS_v7_final',JSON.stringify(reviewsArr));userData.exp+=25;userData.myPostCount=(userData.myPostCount||0)+1;userData.streak+=1;localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));
+        btn.disabled=false;btn.textContent="确认发布 (+25 EXP)";closeModal();renderReviews();updateUserPanel();renderLeaderboard();
+        showToast("📸 点评发布成功！经验值 +25");
+        // 发帖奖励货币
+        setTimeout(()=>{addCoins(COIN_REWARDS.post,'发布点评');},500);
+        setTimeout(()=>{triggerBotReplyToUser(nr.id);},1500+Math.random()*2000);
+    };};
+});
+
+// ==================== 渲染帖子 ====================
+function escapeHtml(s){if(!s)return'';return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function renderReviews(){
+    const rc=document.getElementById('reviewsContainer');rc.innerHTML='';
+    reviewsArr.forEach(r=>{
+        const card=document.createElement('div');card.className='bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-4 space-y-3 animate-fade-in-up '+(r.isHidden?'post-hidden':'');
+        let cmtHtml=(r.comments||[]).map(c=>'<div class="text-xs text-slate-600 bg-slate-50 rounded-lg p-1.5 mb-1"><span class="font-bold text-emerald-600">'+c.user+':</span> '+escapeHtml(c.text)+'</div>').join('');
+        const reportBtn='<button onclick="reportPost(\''+r.id+'\')" class="text-rose-400 hover:text-rose-600 transition-colors text-[10px]">'+(r.reports>0?'🚨 已举报 '+r.reports+'/3':'🚨 举报')+'</button>';
+        const voiceBtn = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window ? '<button onclick="startVoiceInput(\''+r.id+'\')" id="voice-btn-'+r.id+'" class="bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-7 h-7 flex items-center justify-center text-xs" title="语音输入">🎤</button>' : '';
+        card.innerHTML='<div class="flex justify-between items-center"><div class="flex items-center space-x-2"><span class="text-base">'+(r.authorAvatar||"🤖")+'</span><span class="text-xs font-bold text-slate-700">'+r.author+'</span>'+(r.isBot?'<span class="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">AI</span>':'')+'</div><span class="bg-amber-400 text-amber-950 font-extrabold text-[10px] px-2 py-0.5 rounded-full">综合 '+r.avgScore+'分</span></div><div class="w-full rounded-xl overflow-hidden bg-slate-100 max-h-52 flex items-center justify-center"><img src="'+r.image+'" class="w-full h-full object-cover"></div><p class="text-xs text-slate-600">'+escapeHtml(r.text)+'</p><div class="flex justify-between bg-slate-50 px-2.5 py-1 rounded-lg text-[10px] text-slate-400"><span>😋 口味: '+r.taste+'</span><span>🔥 温度: '+r.temp+'</span><span>✨ 外观: '+r.look+'</span></div><div class="flex items-center justify-between pt-1 text-xs border-t border-slate-50"><div class="flex items-center space-x-3"><button onclick="likePost(\''+r.id+'\')" class="text-slate-500 hover:text-emerald-500 transition-colors">👍 赞 '+(r.likes||0)+'</button>'+reportBtn+'</div><span class="text-[9px] text-slate-300">'+r.date+'</span></div><div class="pt-1"><div id="comment-list-'+r.id+'">'+cmtHtml+'</div><div class="flex gap-2 mt-1 items-center">'+voiceBtn+'<input type="text" id="input-'+r.id+'" placeholder="吐槽两句..." class="flex-1 bg-slate-50 border border-slate-100 rounded-full px-3 py-1 text-xs focus:outline-none focus:bg-white"><button onclick="addComment(\''+r.id+'\')" class="bg-emerald-500 text-white rounded-full px-3 py-1 text-xs font-bold">发送</button></div></div>';
+        rc.appendChild(card);
+    });
+}
+
+function likePost(id){let item=reviewsArr.find(r=>r.id==id);if(item){item.likes=(item.likes||0)+1;localStorage.setItem('lunchReviewsHIS_v7_final',JSON.stringify(reviewsArr));renderReviews();showToast("👍 点赞成功！");}}
+
+function addComment(id){
+    const inp=document.getElementById('input-'+id),txt=inp.value.trim();
+    if(!txt)return;
+    if(checkViolations(txt)){alert("🚨 评论已被拦截：请文明发言！");return;}
+    let item=reviewsArr.find(r=>r.id==id);
+    if(item){
+        if(!item.comments)item.comments=[];
+        item.comments.push({user:userData.username,text:txt});
+        localStorage.setItem('lunchReviewsHIS_v7_final',JSON.stringify(reviewsArr));
+        inp.value='';
+        renderReviews();
+        showToast("💬 评论已送达");
+        // 评论奖励货币
+        addCoins(COIN_REWARDS.comment,'发表评论');
+    }
+}
+
+// 监听评论输入框聚焦/失焦
+function setupCommentListeners() {
+    document.addEventListener('focusin', function(e) {
+        if(e.target && e.target.id && e.target.id.startsWith('input-')) {
+            isCommenting = true;
+        }
+    });
+    document.addEventListener('focusout', function(e) {
+        if(e.target && e.target.id && e.target.id.startsWith('input-')) {
+            setTimeout(() => { isCommenting = false; }, 500);
+        }
+    });
+}
+
+// ==================== 语音输入功能 ====================
+let currentRecognition = null;
+
+function startVoiceInput(postId) {
+    const inputEl = document.getElementById('input-' + postId);
+    const voiceBtn = document.getElementById('voice-btn-' + postId);
+    if(!inputEl) return;
+    
+    // 检查浏览器支持
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition) {
+        showToast('❌ 您的浏览器不支持语音输入');
+        return;
+    }
+    
+    // 如果正在录音，停止
+    if(currentRecognition) {
+        currentRecognition.stop();
+        currentRecognition = null;
+        if(voiceBtn) {
+            voiceBtn.classList.remove('bg-red-100', 'text-red-600', 'animate-pulse');
+            voiceBtn.classList.add('bg-slate-100', 'text-slate-600');
+            voiceBtn.innerHTML = '🎤';
+        }
+        return;
+    }
+    
+    // 开始录音
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'zh-CN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    
+    // 更新按钮状态为录音中
+    if(voiceBtn) {
+        voiceBtn.classList.remove('bg-slate-100', 'text-slate-600');
+        voiceBtn.classList.add('bg-red-100', 'text-red-600', 'animate-pulse');
+        voiceBtn.innerHTML = '🔴';
+    }
+    showToast('🎤 请说话...');
+    
+    recognition.onresult = function(event) {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        for(let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if(event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        // 显示临时结果
+        if(interimTranscript) {
+            inputEl.placeholder = '识别中: ' + interimTranscript;
+        }
+        
+        // 最终结果
+        if(finalTranscript) {
+            inputEl.value = finalTranscript;
+            inputEl.placeholder = '吐槽两句...';
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        showToast('❌ 语音识别错误: ' + (event.error === 'no-speech' ? '没有检测到语音' : event.error));
+        if(voiceBtn) {
+            voiceBtn.classList.remove('bg-red-100', 'text-red-600', 'animate-pulse');
+            voiceBtn.classList.add('bg-slate-100', 'text-slate-600');
+            voiceBtn.innerHTML = '🎤';
+        }
+        currentRecognition = null;
+    };
+    
+    recognition.onend = function() {
+        if(voiceBtn) {
+            voiceBtn.classList.remove('bg-red-100', 'text-red-600', 'animate-pulse');
+            voiceBtn.classList.add('bg-slate-100', 'text-slate-600');
+            voiceBtn.innerHTML = '🎤';
+        }
+        currentRecognition = null;
+        // 如果有识别结果，自动聚焦输入框
+        if(inputEl.value.trim()) {
+            inputEl.focus();
+        }
+    };
+    
+    currentRecognition = recognition;
+    recognition.start();
+}
+
+// ==================== 违规内容生成 ====================
+const violatingTemplates = [
+    {text:"🔥🔥🔥 兼职刷单，日赚500+，加微信{num}，轻松赚钱！",type:"广告"},
+    {text:"他妈的今天的菜真难吃，傻逼食堂",type:"脏话"},
+    {text:"低价出售考试答案，保过，联系QQ{num}",type:"作弊"},
+    {text:"这什么垃圾东西，死远点吧",type:"辱骂"},
+    {text:"澳门赌场线上开户，充100送100，网址xxx",type:"赌博"}
+];
+
+function generateViolatingPost() {
+    const tpl = violatingTemplates[Math.floor(Math.random() * violatingTemplates.length)];
+    const num = Math.floor(Math.random() * 90000000 + 10000000);
+    const text = tpl.text.replace("{num}", num);
+    const badAvatars = ["🤡", "👹", "💩", "👻", "🤢"];
+    const badNames = ["广告小号", "骂人精", "骗子", "喷子", "垃圾用户"];
+    return {
+        id: "bot_bad_" + Date.now(),
+        author: badNames[Math.floor(Math.random() * badNames.length)],
+        authorAvatar: badAvatars[Math.floor(Math.random() * badAvatars.length)],
+        text: text,
+        taste: Math.floor(Math.random() * 3),
+        temp: Math.floor(Math.random() * 3),
+        look: Math.floor(Math.random() * 3),
+        avgScore: (Math.random() * 3).toFixed(1),
+        image: generateFoodImage("炒饭", "negative"),
+        date: "刚刚",
+        likes: 0,
+        comments: [],
+        reports: 0,
+        isHidden: false,
+        isBot: true,
+        isViolating: true
+    };
+}
+
+// ==================== 机器人自动发帖 ====================
+function startBotPosting(){
+    setInterval(()=>{
+        // 如果用户正在评论，暂停发帖
+        if(isCommenting) return;
+        // 30%概率发违规帖，70%概率发正常帖
+        const isViolating = Math.random() < 0.3;
+        const p = isViolating ? generateViolatingPost() : generateBotPost();
+        reviewsArr.unshift(p);
+        if(reviewsArr.length>25) reviewsArr.pop();
+        localStorage.setItem('lunchReviewsHIS_v7_final',JSON.stringify(reviewsArr));
+        renderReviews();
+        showToast((isViolating ? '⚠️ ' : '📢 ') + p.author + ' 发布了新点评' + (isViolating ? ' (疑似违规)' : ''));
+    }, 20000 + Math.random() * 20000);
+}
+
+// ==================== 机器人评论互动 ====================
+const botCommentTemplates = [
+    "哇，看起来也太香了吧！明天我也去点这个！",
+    "实名羡慕，我今天吃的那个简直一言难尽...",
+    "这口味打分很客观，支持楼主！",
+    "今天阿姨手抖了吗？日常一问。",
+    "看起来成色不错，下次带上我一起去质检！",
+    "确实，这个菜最近改良后好吃了非常多。",
+    "我也想吃这个！",
+    "HIS食堂终于开窍了？",
+    "下次我也试试这个！",
+    "这个评分很真实，感谢分享！",
+    "看着就饿了，现在去还来得及吗？",
+    "楼主拍的照片好专业！"
+];
+
+function startBotSimulation(){
+    // 每10-20秒执行一次互动
+    setInterval(()=>{
+        // 如果用户正在评论，暂停互动
+        if(isCommenting) return;
+        if(!reviewsArr.length) return;
+        // 随机选一条帖子
+        let targetPost = reviewsArr[Math.floor(Math.random() * reviewsArr.length)];
+        // 跳过已隐藏的帖子
+        if(targetPost.isHidden) return;
+        
+        // 50%概率点赞，50%概率评论
+        if(Math.random() > 0.5){
+            // 点赞
+            targetPost.likes = (targetPost.likes || 0) + 1;
+        } else {
+            // 评论
+            if(!targetPost.comments) targetPost.comments = [];
+            const botIndex = Math.floor(Math.random() * botNames.length);
+            const botName = botNames[botIndex];
+            // 不回复自己的帖子
+            if(targetPost.author !== botName){
+                const commentText = botCommentTemplates[Math.floor(Math.random() * botCommentTemplates.length)];
+                targetPost.comments.push({
+                    user: botName,
+                    text: commentText
+                });
+            }
+        }
+        localStorage.setItem('lunchReviewsHIS_v7_final', JSON.stringify(reviewsArr));
+        renderReviews();
+    }, 10000 + Math.random() * 10000);
+}
+
+function triggerBotReplyToUser(pid){
+    let item = reviewsArr.find(r => r.id == pid);
+    if(item){
+        if(!item.comments) item.comments = [];
+        const botName = botNames[Math.floor(Math.random() * botNames.length)];
+        item.comments.push({
+            user: botName,
+            text: "🤝 捕捉野生食评官！感谢大佬的一手返图质检！"
+        });
+        item.likes += 1;
+        localStorage.setItem('lunchReviewsHIS_v7_final', JSON.stringify(reviewsArr));
+        renderReviews();
+    }
+}
+
+function updateUserPanel(){
+    // 确保coins字段存在
+    if(userData.coins===undefined)userData.coins=0;
+    if(!userData.ownedFrames)userData.ownedFrames=['frame_none'];
+    
+    document.getElementById('profile-avatar-display').textContent=userData.avatar;document.getElementById('profile-name-display').textContent=userData.username;
+    document.getElementById('profile-streak-num').textContent=userData.streak||0;document.getElementById('header-streak-num-pc').textContent=userData.streak||0;document.getElementById('header-streak-num-mobile').textContent=userData.streak||0;
+    
+    // 更新货币显示
+    const coinsEl = document.getElementById('profile-coins');
+    if(coinsEl) coinsEl.textContent = userData.coins;
+    const mobileCoinsEl = document.getElementById('header-coins-mobile');
+    if(mobileCoinsEl) mobileCoinsEl.textContent = userData.coins;
+    
+    const lvl=Math.floor(userData.exp/100)+1,ce=userData.exp%100;
+    document.getElementById('userTitle').textContent=lvl>=4?"👑 传奇食神":(lvl>=2?"🍳 资深干饭人":"🌱 萌新干饭员");
+    document.getElementById('expText').textContent=ce+' / 100 (LV.'+lvl+')';document.getElementById('expBar').style.width=ce+'%';
+    document.getElementById('roastTip').textContent=userData.streak>0?'🔥 状态拉满！您已经连续打卡巡逻了 '+userData.streak+' 天！':"今天还没吃午饭？赶紧在右边或底部菜单挑一个好吃的去点评吧！";
+}
+
+// ==================== 货币系统函数 ====================
+function addCoins(amount,reason){
+    if(userData.coins===undefined)userData.coins=0;
+    userData.coins+=amount;
+    localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));
+    updateUserPanel();
+    showToast('💰 +'+amount+'🪙 '+reason);
+}
+
+function openShopModal(){
+    document.getElementById('shop-coins').textContent=userData.coins||0;
+    renderShopItems();
+    document.getElementById('shopOverlay').classList.remove('pointer-events-none','opacity-0');
+    document.getElementById('shopContent').classList.remove('translate-y-full','lg:scale-95');
+}
+
+function closeShopModal(){
+    document.getElementById('shopContent').classList.add('translate-y-full','lg:scale-95');
+    setTimeout(()=>{document.getElementById('shopOverlay').classList.add('pointer-events-none','opacity-0');},150);
+}
+
+function renderShopItems(){
+    const container=document.getElementById('shopItems');
+    container.innerHTML='';
+    AVATAR_FRAMES.forEach(frame=>{
+        const isOwned=userData.ownedFrames&&userData.ownedFrames.includes(frame.id);
+        const isEquipped=userData.equippedFrame===frame.id;
+        const div=document.createElement('div');
+        div.className='flex justify-between items-center p-3 rounded-xl border '+(isEquipped?'bg-emerald-50 border-emerald-200':(isOwned?'bg-slate-50 border-slate-200':'bg-white border-slate-100'));
+        div.innerHTML='<div class="flex items-center space-x-3"><span class="text-2xl">'+(frame.emoji||'○')+'</span><div><p class="text-xs font-bold">'+frame.name+'</p><p class="text-[10px] text-slate-400">'+(isEquipped?'已装备':(isOwned?'已拥有':frame.price+'🪙'))+'</p></div></div>'+(isEquipped?'<span class="text-xs text-emerald-600 font-bold">使用中</span>':(isOwned?'<button onclick="equipFrame(\''+frame.id+'\')" class="bg-emerald-500 text-white text-xs px-3 py-1 rounded-lg">装备</button>':(userData.coins>=frame.price?'<button onclick="buyFrame(\''+frame.id+'\')" class="bg-yellow-400 text-yellow-950 text-xs px-3 py-1 rounded-lg font-bold">购买</button>':'<span class="text-xs text-slate-400">余额不足</span>')));
+        container.appendChild(div);
+    });
+}
+
+function buyFrame(frameId){
+    const frame=AVATAR_FRAMES.find(f=>f.id===frameId);
+    if(!frame||userData.coins<frame.price)return;
+    userData.coins-=frame.price;
+    if(!userData.ownedFrames)userData.ownedFrames=[];
+    userData.ownedFrames.push(frameId);
+    userData.equippedFrame=frameId;
+    localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));
+    updateUserPanel();renderShopItems();
+    showToast('🎉 成功购买 '+frame.name+'！');
+}
+
+function equipFrame(frameId){
+    userData.equippedFrame=frameId;
+    localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));
+    renderShopItems();
+    showToast('✅ 已装备 '+AVATAR_FRAMES.find(f=>f.id===frameId).name);
+}
+
+function renderLeaderboard(){
+    const rl=document.getElementById('rankList'),bc={};reviewsArr.forEach(r=>{if(r.isBot)bc[r.author]=(bc[r.author]||0)+1;});
+    let list=[{name:userData.username,avatar:userData.avatar,count:userData.myPostCount||0,isMe:true},{name:"隔壁小王",avatar:"🦊",count:bc["隔壁小王"]||14,isMe:false},{name:"华师大鸽王",avatar:"🦁",count:bc["华师大鸽王"]||9,isMe:false},{name:"干饭灵魂",avatar:"🐼",count:bc["干饭灵魂"]||7,isMe:false}];
+    list.sort((a,b)=>b.count-a.count);
+    rl.innerHTML=list.map((u,i)=>'<div class="flex justify-between items-center text-xs p-2 rounded-xl '+(u.isMe?'bg-emerald-50 border border-emerald-100 font-bold':'')+'"><div class="flex items-center space-x-2"><span class="font-mono w-4 text-slate-400">#'+(i+1)+'</span><span>'+u.avatar+'</span><span class="truncate max-w-[100px]">'+u.name+'</span></div><span class="text-slate-500">'+u.count+' 篇</span></div>').join('');
+}
+
+function openEditProfileModal(){
+    const c=document.getElementById('avatarPickerContainer');c.innerHTML='';
+    avatarOptions.forEach(e=>{const b=document.createElement('button');b.className='w-10 h-10 text-xl flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 '+(userData.avatar===e?'ring-2 ring-emerald-500':'');b.textContent=e;b.onclick=()=>{userData.avatar=e;openEditProfileModal();};c.appendChild(b);});
+    document.getElementById('editUsernameInput').value=userData.username;document.getElementById('profileOverlay').classList.remove('pointer-events-none','opacity-0');document.getElementById('profileContent').classList.remove('translate-y-full','lg:scale-95');
+}
+function closeEditProfileModal(){document.getElementById('profileContent').classList.add('translate-y-full','lg:scale-95');setTimeout(()=>{document.getElementById('profileOverlay').classList.add('pointer-events-none','opacity-0');},150);}
+
+function saveUserProfile(){const n=document.getElementById('editUsernameInput').value.trim();if(n){if(checkViolations(n)){alert("🚨 修改失败：新昵称包含非合规词汇！");return;}userData.username=n;}localStorage.setItem('lunchUserDataHIS_v7_final',JSON.stringify(userData));updateUserPanel();renderReviews();renderLeaderboard();closeEditProfileModal();showToast("⚙️ 资料更新成功！");}
+
+// ==================== 启动 ====================
+window.onload = function() { initDOM(); setupCommentListeners(); checkRegistration(); };
+</script>
+</body>
+</html>
